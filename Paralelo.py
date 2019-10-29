@@ -64,67 +64,6 @@ stopwordsman = ["a", "able", "about", "above", "according", "accordingly", "acro
                 "with", "within", "without", "wonder", "would", "would", "x", "y", "yes", "yet", "you", "your",
                 "yours", "yourself", "yourselves", "z", "zero"]
 
-if __name__ == '__main__':
-    timeini = time.time()
-    k = 2
-    rootDir = sys.argv[1]
-    T = []
-    Ttemp=[]
-    fileListTemp = []
-    fileList=[]
-    mapFiles={}
-    if comm.rank==0:
-        fileListTemp = list(os.walk(rootDir))[0][2]
-        for i in fileListTemp:
-            mapFiles[os.stat(rootDir+i).st_size]=i
-        sort = sorted(mapFiles.keys())[::-1]
-        del fileListTemp [:]
-        for i in sort:
-            fileListTemp.append(mapFiles[i])
-
-    fileList = comm.bcast(fileListTemp, root)
-
-    Ttemp = comm.gather(getOcurrence(fileList),root)
-    tFinal = []
-    if comm.rank == 0:
-        for i in range(len(Ttemp)):
-            tFinal.extend([element for element in Ttemp[i] if element not in tFinal])
-    T=comm.bcast(tFinal, root)
-
-    fdtTemp=comm.gather(ft(T,fileList),root)
-    mapaFinal={}
-    if comm.rank == 0:
-        for i in range(len(fdtTemp)):
-            mapaFinal.update(fdtTemp[i])
-    fdt=comm.bcast(mapaFinal, root)
-
-    matriz=comm.gather(preJaccard(fdt), root)
-    matrizFinalTemp=0
-    if comm.rank==0:
-        for matrix in matriz:
-            matrizFinalTemp += matrix
-    matrizFinal=comm.bcast(matrizFinalTemp, root)
-
-    centroides,C= Kmeans(matrizFinal,k)
-    group=[]
-    if comm.rank==0:
-        for i in range(k):
-            group.insert(i,[])
-        listaFiles=list(fdt.keys())
-        cont=0;
-        for i in C:
-            group[int(i)].append(listaFiles[cont])
-            cont+=1
-        finalTime=time.time()-timeini
-        cont=0
-        for i in group:
-            print("Cluster numero ",cont,":")
-            for j in i:
-                print("Documento: ",j)
-            print("--"*50)
-            cont+=1
-        print("Tiempo final: ", finalTime)
-
 
 def jaccard(x, y):
     sumMin=0
@@ -223,3 +162,65 @@ def Kmeans(matrizFinal,k,maxIters = 10,):
                     centroidesFinales[j] += recibZ[i][j]
             centroids = centroidesFinales
     return centroids,z
+
+
+    if __name__ == '__main__':
+    timeini = time.time()
+    k = 2
+    rootDir = sys.argv[1]
+    T = []
+    Ttemp=[]
+    fileListTemp = []
+    fileList=[]
+    mapFiles={}
+    if comm.rank==0:
+        fileListTemp = list(os.walk(rootDir))[0][2]
+        for i in fileListTemp:
+            mapFiles[os.stat(rootDir+i).st_size]=i
+        sort = sorted(mapFiles.keys())[::-1]
+        del fileListTemp [:]
+        for i in sort:
+            fileListTemp.append(mapFiles[i])
+
+    fileList = comm.bcast(fileListTemp, root)
+
+    Ttemp = comm.gather(getOcurrence(fileList),root)
+    tFinal = []
+    if comm.rank == 0:
+        for i in range(len(Ttemp)):
+            tFinal.extend([element for element in Ttemp[i] if element not in tFinal])
+    T=comm.bcast(tFinal, root)
+
+    fdtTemp=comm.gather(ft(T,fileList),root)
+    mapaFinal={}
+    if comm.rank == 0:
+        for i in range(len(fdtTemp)):
+            mapaFinal.update(fdtTemp[i])
+    fdt=comm.bcast(mapaFinal, root)
+
+    matriz=comm.gather(preJaccard(fdt), root)
+    matrizFinalTemp=0
+    if comm.rank==0:
+        for matrix in matriz:
+            matrizFinalTemp += matrix
+    matrizFinal=comm.bcast(matrizFinalTemp, root)
+
+    centroides,C= Kmeans(matrizFinal,k)
+    group=[]
+    if comm.rank==0:
+        for i in range(k):
+            group.insert(i,[])
+        listaFiles=list(fdt.keys())
+        cont=0;
+        for i in C:
+            group[int(i)].append(listaFiles[cont])
+            cont+=1
+        finalTime=time.time()-timeini
+        cont=0
+        for i in group:
+            print("Cluster numero ",cont,":")
+            for j in i:
+                print("Documento: ",j)
+            print("--"*50)
+            cont+=1
+        print("Tiempo final: ", finalTime)
