@@ -59,25 +59,6 @@ stopwordsman = ["a", "able", "about", "above", "according", "accordingly", "acro
                  "with", "within", "without", "wonder", "would", "would", "x", "y", "yes", "yet", "you", "your",
                  "yours", "yourself", "yourselves", "z", "zero","ii"]
 
-if __name__ == '__main__':
-    timeini = time.time()
-    k = 10
-    rootDir = sys.argv[1]
-    ocurrenceFile = getOcurrence(rootDir)
-    fdt = ft(ocurrenceFile)
-    matrizJaccard = preJaccard(fdt)
-    centroides, finalList, group = kMeans(fdt,matrizJaccard, k)
-    finalTime= time.time() - timeini
-    cont=0
-    for i in group:
-        print("Cluster numero ",cont,":")
-        for j in i:
-            print("Documento: ",j)
-        print("--"*50)
-        cont+=1
-    print("Tiempo final: ", finalTime)
-
-
 def getOcurrence(rootDir):
     ocurrenceFile = []
     dictFiles={}
@@ -160,3 +141,21 @@ def kMeans(fdt,X, K, maxIters=6, plot_progress=None):
         group[i].append(listFiles[cont])
         cont+=1
     return np.array(centroids), C, group
+
+if __name__ == '__main__':
+    timeini = time.time()
+    k = 10
+    rootDir = sys.argv[1]
+    ocurrenceFile = getOcurrence(rootDir)
+    fdt = ft(ocurrenceFile)
+    matrizJaccard = preJaccard(fdt)
+    centroides, finalList, group = kMeans(fdt,matrizJaccard, k)
+    finalTime= time.time() - timeini
+    cont=0
+    for i in group:
+        print("Cluster numero ",cont,":")
+        for j in i:
+            print("Documento: ",j)
+        print("--"*50)
+        cont+=1
+    print("Tiempo final: ", finalTime)
